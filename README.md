@@ -29,7 +29,8 @@ so a key is never silently ignored.
   linked statically, the same everywhere (Android has no system libcrypto for apps).
   Without it SQLCipher is still bundled but uses CommonCrypto on Apple targets (iOS and
   macOS, nothing extra linked in) and the system libcrypto elsewhere (`OPENSSL_DIR` or
-  pkg-config). For iOS: `default-features = false, features = ["sync"]`.
+  pkg-config). For iOS: `default-features = false, features = ["sync"]`, and set
+  `IPHONEOS_DEPLOYMENT_TARGET` so the bundled C code and Rust are built for the same iOS.
 
 ## Platforms and size
 

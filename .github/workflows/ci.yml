@@ -90,6 +90,9 @@ jobs:
 
   ios:
     runs-on: macos-latest
+    env:
+      # one deployment target for the C (SQLCipher, OpenSSL) and Rust objects, or linking fails
+      IPHONEOS_DEPLOYMENT_TARGET: "15.0"
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
