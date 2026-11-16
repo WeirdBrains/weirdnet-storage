@@ -25,5 +25,17 @@ so a key is never silently ignored.
 ## Features
 
 - `sync` (default): the change-log module; adds serde, serde_json, sha2 and base64.
+- `vendored-openssl` (default): SQLCipher is bundled with OpenSSL built from source and
+  linked statically, the same everywhere (Android has no system libcrypto for apps).
+  Without it SQLCipher is still bundled but uses CommonCrypto on Apple targets (iOS and
+  macOS, nothing extra linked in) and the system libcrypto elsewhere (`OPENSSL_DIR` or
+  pkg-config). For iOS: `default-features = false, features = ["sync"]`.
 
-SQLCipher is always bundled with vendored OpenSSL (`rusqlite/bundled-sqlcipher-vendored-openssl`).
+## Platforms and size
+
+CI tests on Linux, macOS and Windows, builds for Android (aarch64, armv7, x86_64, API 26)
+and iOS, and writes a size report to each run's summary: `examples/size_probe.rs` (open an
+encrypted database, migrate, write and read a row) against an empty program, built with the
+`size` profile (opt-level z, LTO, stripped). Run `scripts/size_report.sh [TARGET]
+[--no-vendored]` for one row. On x86_64 Linux the vendored build adds about 5.4 MiB, the
+system-crypto build about 1.1 MiB (SQLCipher itself), so most of it is OpenSSL's libcrypto.

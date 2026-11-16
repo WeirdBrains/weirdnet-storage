@@ -1,7 +1,6 @@
 name: CI
 on:
   push:
-    branches: [main]
   pull_request:
 env:
   CARGO_TERM_COLOR: always
@@ -18,5 +17,93 @@ jobs:
       - run: cargo test --locked
       - run: cargo clippy --locked --all-targets --all-features -- -D warnings
       - run: cargo test --locked --all-features
+      # SQLCipher on the system libcrypto
       - run: cargo test --locked --no-default-features
+      - run: cargo test --locked --no-default-features --features sync
       - run: cargo package --locked
+      - name: size report
+        run: |
+          {
+            echo "### Binary size (size profile: opt-level z, LTO, stripped)"
+            echo
+            echo "| target | crypto | probe | baseline | storage adds |"
+            echo "|---|---|---|---|---|"
+            scripts/size_report.sh
+            scripts/size_report.sh "" --no-vendored
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-2022]
+    runs-on: ${{ matrix.os }}
+    env:
+      # OpenSSL's Configure needs a full Perl; Git's on Windows lacks modules
+      OPENSSL_SRC_PERL: ${{ matrix.os == 'windows-2022' && 'C:\Strawberry\perl\bin\perl.exe' || 'perl' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked
+      - if: matrix.os == 'macos-latest'
+        # CommonCrypto instead of OpenSSL
+        run: cargo test --locked --no-default-features --features sync
+      - name: size report
+        shell: bash
+        run: |
+          {
+            echo "### Binary size on ${{ matrix.os }}"
+            echo
+            echo "| target | crypto | probe | baseline | storage adds |"
+            echo "|---|---|---|---|---|"
+            scripts/size_report.sh
+            if [ "${{ matrix.os }}" = macos-latest ]; then scripts/size_report.sh "" --no-vendored; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  android:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: build and size (API 26)
+        run: |
+          bin="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          t=${{ matrix.target }}
+          clang=$t; [ "$t" = armv7-linux-androideabi ] && clang=armv7a-linux-androideabi
+          up=$(echo "$t" | tr 'a-z-' 'A-Z_'); low=$(echo "$t" | tr '-' '_')
+          export "CC_$low=$bin/${clang}26-clang" "AR_$low=$bin/llvm-ar" "RANLIB_$low=$bin/llvm-ranlib"
+          export "CARGO_TARGET_${up}_LINKER=$bin/${clang}26-clang"
+          cargo build --locked --target "$t"
+          {
+            echo "### Binary size on Android"
+            echo
+            echo "| target | crypto | probe | baseline | storage adds |"
+            echo "|---|---|---|---|---|"
+            scripts/size_report.sh "$t"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim
+      - run: cargo build --locked --target aarch64-apple-ios
+      - run: cargo build --locked --target aarch64-apple-ios --no-default-features --features sync
+      - name: size report
+        run: |
+          {
+            echo "### Binary size on iOS"
+            echo
+            echo "| target | crypto | probe | baseline | storage adds |"
+            echo "|---|---|---|---|---|"
+            scripts/size_report.sh aarch64-apple-ios
+            scripts/size_report.sh aarch64-apple-ios --no-vendored
+          } >> "$GITHUB_STEP_SUMMARY"

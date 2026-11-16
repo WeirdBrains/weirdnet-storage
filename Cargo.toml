@@ -11,15 +11,19 @@ documentation = "https://docs.rs/weirdnet-storage"
 readme = "README.md"
 keywords = ["sqlite", "sqlcipher", "migrations", "sync", "storage"]
 categories = ["database"]
-include = ["src/**", "README.md", "LICENSE"]
+include = ["src/**", "README.md", "LICENSE", "CHANGELOG.md"]
 
 [features]
-default = ["sync"]
+default = ["sync", "vendored-openssl"]
+# Build OpenSSL from source and link it statically into SQLCipher. Without it SQLCipher uses
+# CommonCrypto on Apple targets (smaller, nothing bundled) and the system libcrypto elsewhere
+# (OPENSSL_DIR, or pkg-config).
+vendored-openssl = ["rusqlite/bundled-sqlcipher-vendored-openssl"]
 # Row change log, three-way merge decisions and row codecs for syncing databases.
 sync = ["dep:serde", "dep:serde_json", "dep:sha2", "dep:base64"]
 
 [dependencies]
-rusqlite = { version = "0.37", features = ["bundled-sqlcipher-vendored-openssl", "backup"] }
+rusqlite = { version = "0.37", features = ["bundled-sqlcipher", "backup"] }
 thiserror = "2"
 zeroize = "1"
 hex = "0.4"
@@ -30,3 +34,12 @@ base64 = { version = "0.22", optional = true }
 
 [dev-dependencies]
 tempfile = "3"
+
+# What the size report builds: as small as a release can be.
+[profile.size]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
