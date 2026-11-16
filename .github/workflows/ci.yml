@@ -30,7 +30,7 @@ jobs:
             echo "|---|---|---|---|---|"
             scripts/size_report.sh
             scripts/size_report.sh "" --no-vendored
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
   desktop:
     strategy:
@@ -58,7 +58,7 @@ jobs:
             echo "|---|---|---|---|---|"
             scripts/size_report.sh
             if [ "${{ matrix.os }}" = macos-latest ]; then scripts/size_report.sh "" --no-vendored; fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
   android:
     strategy:
@@ -86,7 +86,7 @@ jobs:
             echo "| target | crypto | probe | baseline | storage adds |"
             echo "|---|---|---|---|---|"
             scripts/size_report.sh "$t"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
   ios:
     runs-on: macos-latest
@@ -109,4 +109,4 @@ jobs:
             echo "|---|---|---|---|---|"
             scripts/size_report.sh aarch64-apple-ios
             scripts/size_report.sh aarch64-apple-ios --no-vendored
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
