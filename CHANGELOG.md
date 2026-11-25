@@ -6,6 +6,8 @@ All notable changes to weirdnet-storage are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-25
+
 ### Added
 
 - `replication` feature: a primary and hot standbys kept current from an append-only,

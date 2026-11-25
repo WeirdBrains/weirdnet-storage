@@ -1,6 +1,6 @@
 [package]
 name = "weirdnet-storage"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 rust-version = "1.99"
 description = "Weirdnet storage: SQLCipher databases opened with a caller-supplied raw key, rekey and plaintext conversion, an ordered migration runner, savepoints, private files, snapshots and an optional row change log for sync."
