@@ -233,6 +233,8 @@ pub fn policies(conn: &Connection) -> Result<Vec<Policy>> {
 /// The SQL that applies `policy` (deterministic: run it through a replicated primary's
 /// `schema`). A policy for a table that has one must be at least as strong (same column and
 /// unit, no shorter, not less immutable); the stronger triggers are added alongside.
+/// `since_ms` records when the policy took effect (pass the current time); it is part of the
+/// SQL, so every replica stores the same value.
 pub fn protect_sql(conn: &Connection, policy: &Policy, since_ms: i64) -> Result<String> {
     check_table(conn, policy)?;
     if let Some(old) = self::policy(conn, &policy.table)?
