@@ -6,6 +6,24 @@ All notable changes to weirdnet-storage are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `replication` feature: a primary and hot standbys kept current from an append-only,
+  hash-chained log written in the same transaction as the data; epochs that fence an old
+  primary; `Replica::tick` for automatic failover and stepping down; fail-back that rewinds a
+  returning node's unreplicated entries and keeps them.
+- `replication-service` feature: `ReplicationService` and async `follow`/`rejoin` over
+  weirdnet-service sessions (linked devices or roster grants with `RosterAuth`).
+- `lease` feature: weirdnet-sync's majority-vote lease as the leadership and epoch source.
+- `retention` feature: minimum-age policies that refuse earlier deletes and edits, a
+  hash-chained seal ledger, `purge_expired`, `verify`, encrypted archives with
+  `archive_to`/`verify_archive`, and a `guard` against drops and alters.
+- `REPLAYING`, a trigger condition for app triggers that should not run on replay.
+- A vendored release script (`scripts/weirdnet_release.py`) and `release.toml`.
+
+Nothing changes for existing users: the new code is behind new features, and the default
+features are unchanged.
+
 ## [0.1.1] - 2026-11-21
 
 ### Changed

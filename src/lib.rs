@@ -11,6 +11,12 @@
 mod db;
 mod error;
 pub mod files;
+#[cfg(any(feature = "replication", feature = "retention"))]
+mod guard;
+#[cfg(feature = "replication")]
+pub mod replicate;
+#[cfg(feature = "retention")]
+pub mod retention;
 #[cfg(feature = "sync")]
 pub mod sync;
 mod tx;
@@ -20,6 +26,8 @@ pub use db::{
     schema_version, snapshot_to,
 };
 pub use error::{Result, StorageError};
+#[cfg(any(feature = "replication", feature = "retention"))]
+pub use guard::REPLAYING;
 pub use rusqlite;
 pub use tx::{begin, release, rollback, savepoint};
 

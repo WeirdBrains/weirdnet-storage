@@ -21,6 +21,14 @@ default = ["sync", "vendored-openssl"]
 vendored-openssl = ["rusqlite/bundled-sqlcipher-vendored-openssl"]
 # Row change log, three-way merge decisions and row codecs for syncing databases.
 sync = ["dep:serde", "dep:serde_json", "dep:sha2", "dep:base64"]
+# Primary and hot standbys from a hash-chained replication log, epochs, failover, fail-back.
+replication = ["rusqlite/session", "dep:serde", "dep:serde_bytes", "dep:sha2"]
+# Serve and follow the replication log over weirdnet-service sessions (weirdnet-net).
+replication-service = ["replication", "dep:weirdnet-service"]
+# weirdnet-sync majority-vote leases as replication leadership.
+lease = ["replication", "dep:weirdnet-sync"]
+# Retention policies, guard triggers, hash-chained seals, purge, archives.
+retention = ["rusqlite/hooks", "dep:sha2"]
 
 [dependencies]
 rusqlite = { version = "0.37", features = ["bundled-sqlcipher", "backup"] }
@@ -31,9 +39,28 @@ serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", features = ["float_roundtrip"], optional = true }
 sha2 = { version = "0.10", optional = true }
 base64 = { version = "0.22", optional = true }
+serde_bytes = { version = "0.11", optional = true }
+weirdnet-service = { version = "0.1", default-features = false, optional = true }
+weirdnet-sync = { version = "0.8", optional = true }
 
 [dev-dependencies]
 tempfile = "3"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+
+[[test]]
+name = "replication"
+required-features = ["replication"]
+
+[[test]]
+name = "service"
+required-features = ["replication-service"]
+
+[[test]]
+name = "retention"
+required-features = ["retention"]
+
+[package.metadata.docs.rs]
+features = ["sync", "vendored-openssl", "replication", "replication-service", "lease", "retention"]
 
 # What the size report builds: as small as a release can be.
 [profile.size]

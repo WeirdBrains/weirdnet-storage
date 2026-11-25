@@ -20,6 +20,14 @@ jobs:
       # SQLCipher on the system libcrypto
       - run: cargo test --locked --no-default-features
       - run: cargo test --locked --no-default-features --features sync
+      # each new feature on its own
+      - run: cargo clippy --locked --all-targets --features replication -- -D warnings
+      - run: cargo clippy --locked --all-targets --features replication-service -- -D warnings
+      - run: cargo clippy --locked --all-targets --features lease -- -D warnings
+      - run: cargo clippy --locked --all-targets --no-default-features --features retention -- -D warnings
+      - run: cargo test --locked --features replication,retention
+      - run: RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps --all-features
+      - run: python3 scripts/weirdnet_release.py validate
       - run: cargo package --locked
       - name: size report
         run: |
@@ -45,6 +53,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --locked
+      - run: cargo test --locked --all-features
       - if: matrix.os == 'macos-latest'
         # CommonCrypto instead of OpenSSL
         run: cargo test --locked --no-default-features --features sync
@@ -80,6 +89,7 @@ jobs:
           export "CC_$low=$bin/${clang}26-clang" "AR_$low=$bin/llvm-ar" "RANLIB_$low=$bin/llvm-ranlib"
           export "CARGO_TARGET_${up}_LINKER=$bin/${clang}26-clang"
           cargo build --locked --target "$t"
+          cargo build --locked --target "$t" --features replication-service,lease,retention
           {
             echo "### Binary size on Android"
             echo
@@ -100,6 +110,7 @@ jobs:
           targets: aarch64-apple-ios, aarch64-apple-ios-sim
       - run: cargo build --locked --target aarch64-apple-ios
       - run: cargo build --locked --target aarch64-apple-ios --no-default-features --features sync
+      - run: cargo build --locked --target aarch64-apple-ios --no-default-features --features sync,replication-service,lease,retention
       - name: size report
         run: |
           {
